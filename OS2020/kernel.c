@@ -27,26 +27,42 @@
 void handleInterrupt21(int,int,int,int);
 void printString(char*,int);
 void printLogo();
+void clearScreen();
 
 void main()
 {
    makeInterrupt21();
    printLogo();
    printString("Hello world from Thomas.\r\n\0",1);
-   while(1); // stop program by putting in an infinite loop
+   while(1); /* stop program by putting in an infinite loop */
 }
 
 void printString(char* c, int d)
 {
-   // calling interrupt 16 with AH set to the value 14 prints the
-   // character stored in AL
-   char ah = 14;
+   /* calling interrupt 16 with AH set to the value 14 prints the character stored in AL */
+   /* alternatively, calling interrupt 23 with AH set to 0 sends the character in AL to the printer */
 
-   // repeat for every character in c to print the full string
-   for (int i = 0; c[i] != '\0'; ) {
+   /* the interrupt used in this function depends on the value of d */
+   /* interrupt 23 is called if d is 1, interrupt 16 is called otherwise */
+   char ah = (d == 1 ? 0 : 14);
+
+   /* repeat for each character in c to print the full string
+   terminate upon encountering null character without printing it */
+   int i = 0;
+   while (c[i] != '\0') {
      char al = c[i];
-     int ax = ah * 256 + al; // set full value of ax register
-     interrupt(16, ax, 0, 0, 0); // call interrupt
+     int ax = ah * 256 + al; /* set full value of ax register */
+
+     if (d == 1) {
+       /* call interrupt 23 if d set to 1 */
+       interrupt(23, ax, 0, 0, 0);
+     }
+     else {
+       /* call interrupt 16 otherwise */
+       interrupt(16, ax, 0, 0, 0);
+     }
+
+     i = i + 1; /* move to next character */
    }
 
    return;
@@ -66,7 +82,14 @@ void printLogo()
 
 /* MAKE FUTURE UPDATES HERE */
 /* VVVVVVVVVVVVVVVVVVVVVVVV */
-
+void clearScreen() {
+  /* do a carriage return on 24 lines to clear them */
+  int i = 0;
+  while (i < 24) {
+    printString("\r\n\0", 1); /* clear line */
+    i = i + 1; /* move to next line */
+  }
+}
 
 
 /* ^^^^^^^^^^^^^^^^^^^^^^^^ */
