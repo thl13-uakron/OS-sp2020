@@ -1,0 +1,55 @@
+Operating Systems 001
+Lab 1 Work Log
+
+	We downloaded the files kernel.c, kernel.asm, and bootload.asm, all 
+	of which are present in this directory
+
+	We assembled bootload.asm into the bootload executable, which is 
+	present in this directory
+
+	We assembled kernel.asm into the kasm.o output file, which is 
+	present in this directory
+
+	We created the file CompileOS.sh and added terminal commands to 
+	do the following:
+
+		Populate the disk image with zeroes to fill it up to its necessary
+		size
+
+		Place the contents of bootload into the disk image
+
+		Compile kernel.c into kernel.o using bcc
+
+		Link kernel.o with kasm.o to create the kernel executable
+
+		Place the contents of kernel into the disk image at the necessary
+		location (sector 259)
+
+	There are a total of five commands that can be viewed when opening
+	compileOS.sh
+
+	We made compileOS.sh executable. Entering './compileOS.sh' will
+	create kernel.o and kernel, and make it so that entering 'echo “c” | 
+	bochs –f bdos.txt' will run the kernel in bochs.
+
+	We added the printString function to kernel.c
+
+		Given parameters c (char*) and d (int), each character in c that 
+		comes before the null character (not including the null character) 
+		will be sent to the printer output through interrupt 0d23 (0x17) 
+		if d equals 1, or displayed on the screen through interrupt 0d16
+		(0x10) otherwise.
+
+		When the kernel is run, the logo will appear on the screen since 
+		d is set to 0, while the statement "Hello world from Thomas." will
+		appear in the file printer.out since it was printed with d set to 1.
+
+	We set printString to be called by the handleInterrupt21 function
+	when the parameter for ax is set to 0, with bx being passed as c and cx
+	being passed as d.
+
+	We then replaced each call of printString in the rest of the program with 
+	a call to interrupt 0d33 (0x21) that results in the same output. These 
+	changes can be viewed in the main, printLogo, and clearScreen functions
+	in kernel.c.
+		
