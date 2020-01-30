@@ -30,6 +30,8 @@ void clearScreen();
 void readString(char*);
 int mod(int, int);
 int div(int, int);
+void readInt(int*);
+void writeInt(int, int);
 
 void main()
 {
@@ -37,10 +39,13 @@ void main()
 
    makeInterrupt21();
    printLogo();
-   interrupt(33, 0, "Hello world from Thomas.\r\n\0", 1, 0);
+   interrupt(33, 0, "Hello world from Thomas and Geetha.\r\n\0", 1, 0);
+
+   /* run test function for reading and writing ints */
+   writeInt(2020, 0);
 
    /* run test function for user input */
-   interrupt(33, 0, "Enter a string: \0", 0, 0);
+   interrupt(33, 0, "\nEnter a string: \0", 0, 0);
    readString(input);
    interrupt(33, 0, "\nYou entered: \0", 0, 0);
    interrupt(33, 0, input, 0, 0);
@@ -88,7 +93,7 @@ void printLogo()
    interrupt(33, 0, "   //   \\\\        | |_) | | (_| | (__|   <| |__| | |__| |____) |\r\n\0",0, 0);
    interrupt(33, 0, "._/'     `\\.      |____/|_|\\__,_|\\___|_|\\_\\_____/ \\____/|_____/\r\n\0",0, 0);
    interrupt(33, 0, " BlackDOS2020 v. 1.03, c. 2019. Based on a project by M. Black. \r\n\0",0, 0);
-   interrupt(33, 0, " Author(s): Thomas Li.\r\n\r\n\0",0, 0);
+   interrupt(33, 0, " Author(s): Thomas Li, Geetha Malempati.\r\n\r\n\0",0, 0);
 }
 
 /* MAKE FUTURE UPDATES HERE */
@@ -136,6 +141,70 @@ void readString(char* c) {
       }
     }
   }
+
+  return;
+}
+
+int mod(int a, int b) {
+  /* compute the value of x % y */
+  int result = a;
+  while (result >= b) result = result - b;
+  return result;
+}
+
+int div(int a, int b) {
+  /* compute the value of a / b */
+  int result = 0;
+  if (b > 0) {
+    while (result * b <= a) result = result + 1;
+    if (result * b > a) result = result - 1;
+  }
+  return result;
+}
+
+void readInt(int* n) {
+  return;
+}
+
+void writeInt(int x, int d) {
+  /* convert x to string and print */
+  char c[6];
+  int divisor = 1000;
+  int modulo = 10000;
+  int i = 0;
+
+  if (x != 0) {
+    /* each digit can be extracted by taking (x % 10^k) / 10^(k-1) for k in range (log(x) + 1, 1)*/
+    /* assuming x does not equal 0*/
+
+    /* account for x exceeding highest possible value of 10^k */
+    if (x >= modulo) {
+      c[i] = div(x, modulo) + '0';
+      i = i + 1;
+    }
+    else {
+      /* account for x being lower than initial value of 10^(k-1) */
+      while (modulo > x * 10) {
+        modulo = div(modulo, 10);
+      }
+      divisor = div(modulo, 10);
+    }
+
+    while (modulo >= 10) {
+      c[i] = div(mod(x, modulo), divisor) + '0';
+      i = i + 1;
+      divisor = div(divisor, 10);
+      modulo = div(modulo, 10);
+    }
+  }
+  else {
+    c[i] = '0';
+    i = i + 1;
+  }
+
+  /* append null character */
+  c[i] = '\0';
+  interrupt(33, 0, c, d, 0);
 
   return;
 }
