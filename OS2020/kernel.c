@@ -27,30 +27,75 @@
 void handleInterrupt21(int,int,int,int);
 void printLogo();
 void clearScreen();
-void readString(char*);
 int mod(int, int);
 int div(int, int);
-void readInt(int*);
-void writeInt(int, int);
 
 void main()
 {
-   char input[256];
+   /*char input[256];
+   int* n;
 
+   /*
    makeInterrupt21();
    printLogo();
    interrupt(33, 0, "Hello world from Thomas and Geetha.\r\n\0", 1, 0);
 
-   /* run test function for reading and writing ints */
-   writeInt(2020, 0);
-
    /* run test function for user input */
-   interrupt(33, 0, "\nEnter a string: \0", 0, 0);
-   readString(input);
-   interrupt(33, 0, "\nYou entered: \0", 0, 0);
-   interrupt(33, 0, input, 0, 0);
+   /*interrupt(33, 0, "Enter a string: \0", 0, 0);
+   interrupt(33, 1, input, 0, 0);
+   interrupt(33, 0, "\r\nYou entered: \0", 0, 0);
+   interrupt(33, 0, input, 0, 0);*/
 
+   /* run test function for reading and writing ints */
+   /*
+   interrupt(33, 0, "\r\n\nEnter an integer: \0", 0, 0);
+   interrupt(33, 14, n, 0, 0);
+   interrupt(33, 0, "\r\nThe integer you entered is \0", 0, 0);
+   interrupt(33, 13, *n, 0, 0);
+   interrupt(33, 0, "\r\nDouble the integer you entered is \0", 0, 0);
+   interrupt(33, 13, *n * 2, 0, 0);
+
+   /*
    while(1); /* stop program by putting in an infinite loop */
+
+   char food[25], adjective[25], color[25], animal[25];
+   int temp;
+   makeInterrupt21();
+   printLogo();
+   interrupt(33,0,"\r\nWelcome to the Mad Libs kernel.\r\n\0",0,0);
+   interrupt(33,0,"Enter a food: \0",0,0);
+   interrupt(33,1,food,0,0);
+   temp = 0;
+   while ((temp < 100) || (temp > 120)) {
+      interrupt(33,0,"Enter a number between 100 and 120: \0",0,0);
+      interrupt(33,14,&temp,0,0);
+   }
+   interrupt(33,0,"Enter an adjective: \0",0,0);
+   interrupt(33,1,adjective,0,0);
+   interrupt(33,0,"Enter a color: \0",0,0);
+   interrupt(33,1,color,0,0);
+   interrupt(33,0,"Enter an animal: \0",0,0);
+   interrupt(33,1,animal,0,0);
+   interrupt(33,0,"Your note is on the printer, go get it.\r\n\0",0,0);
+   interrupt(33,0,"Dear Professor O\'Neil,\r\n\0",1,0);
+   interrupt(33,0,"\r\nI am so sorry that I am unable to turn in my program at this time.\r\n\0",1,0);
+   interrupt(33,0,"First, I ate a rotten \0",1,0);
+   interrupt(33,0,food,1,0);
+   interrupt(33,0,", which made me turn \0",1,0);
+   interrupt(33,0,color,1,0);
+   interrupt(33,0," and extremely ill.\r\n\0",1,0);
+   interrupt(33,0,"I came down with a fever of \0",1,0);
+   interrupt(33,13,temp,1,0);
+   interrupt(33,0,". Next my \0",1,0);
+   interrupt(33,0,adjective,1,0);
+   interrupt(33,0," pet \0",1,0);
+   interrupt(33,0,animal,1,0);
+   interrupt(33,0," must have\r\nsmelled the remains of the \0",1,0);
+   interrupt(33,0,food,1,0);
+   interrupt(33,0," on my computer, because he ate it. I am\r\n\0",1,0);
+   interrupt(33,0,"currently rewriting the program and hope you will accept it late.\r\n\0",1,0);
+   interrupt(33,0,"\r\nSincerely,\r\n\0",1,0);
+   interrupt(33,0,"Thomas and Geetha\r\n\0",1,0);
 }
 
 void printString(char* c, int d)
@@ -113,30 +158,29 @@ void readString(char* c) {
   char backspace = 8; /* ascii code of backspace character */
 
   /* record input */
-  char* input;
-  input[1] = '\0';
+  char input;
 
   while (1) {
     /* take and print character from keyboard input */
-    input[0] = interrupt(22, 0, 0, 0, 0);
-    interrupt(33, 0, input, 0, 0);
+    input = interrupt(22, 0, 0, 0, 0);
+    if (!(input == backspace && i <= 0)) {
+      interrupt(16, (14 * 256) + input, 0, 0, 0);
+    }
 
     /* terminate input loop if enter is pressed */
-    if (input[0] == enter) {
+    if (input == enter) {
       /* append null character to string */
       c[i] = '\0';
       break;
     }
     else {
-      /* record character to string otherwise */
-      c[i] = input[0];
-
-      /* move to next index unless backspace is pressed */
-      if (c[i] == backspace) {
+      /* record character to string otherwise and move to next index unless backspace is pressed */
+      if (input == backspace) {
         /* decrement index if backspace is pressed unless index is 0 */
         if (i > 0) i = i - 1;
       }
       else {
+        c[i] = input;
         i = i + 1;
       }
     }
@@ -163,6 +207,18 @@ int div(int a, int b) {
 }
 
 void readInt(int* n) {
+  char c[256];
+  int i = 0;
+  *n = 0;
+
+  /* read a string and convert it to an int */
+  interrupt(33, 1, c, 0, 0);
+  while (c[i] != '\0') {
+    *n = *n * 10; /* shift current digits to the left by 1 */
+    *n = *n + (c[i] - '0'); /* convert character to digit and add */
+    i = i + 1;
+  }
+
   return;
 }
 
@@ -221,10 +277,21 @@ void handleInterrupt21(int ax, int bx, int cx, int dx)
         printString(bx, cx);
         break;
       case 1:
+        /* if ax is 1, a string is read from keyboard input and gets stored in bx */
+        readString(bx);
         break;
 /*      case 2: case 3: case 4: case 5: */
 /*      case 6: case 7: case 8: case 9: case 10: */
-/*      case 11: case 12: case 13: case 14: case 15: */
+/*      case 11: case 12: */
+      case 13:
+        /* if ax is 13, the bx gets printed as an integer with cx determining if the output goes to the screen or the printer */
+        writeInt(bx, cx);
+        break;
+      case 14:
+        /* if ax is 14, a string is read of keyboard input before being converted to an integer and stored in bx */
+        readInt(bx);
+        break;
+      /*case 15: */
       default: interrupt(33, 0, "General BlackDOS error.\r\n\0", 0, 0);
    }
 }
