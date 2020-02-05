@@ -1,0 +1,113 @@
+Operating Systems 001
+
+Lab 2 Work Log
+
+	We added the printString function to kernel.c
+
+		Given parameter c (char*),  the function calls interrupt 0d22 
+		(0x16) to read a character from the keyboard, which gets saved to 
+		the next position in c and is also printed on the screen using 
+		interrupt 0d16 (0x10)
+
+		If the backspace character is pressed, it gets printed on the screen,
+		moving the cursor back, and decrements the index if it is not 
+		already set to 0
+
+		If the enter key is pressed, the input ends and a null character is 
+		appended to the current index to form a string
+
+		The backspace and enter keys are not added to the string
+
+	We added the mod and div functions to kernel.c to act in place of 
+	the / and % operations, which are not supported in bcc.
+
+	We added the writeInt function to kernel.c
+
+		Given parameter x (int), the mod and div functions are used to 
+		extract each digit of x and add it to a string, which gets printed
+		to the screen using the printString function called through 
+		interrupt 0d33 (0x21)
+
+		If x equals 0, "0" gets printed to the screen directly as the 
+		routine used for other numbers does not work for it
+
+	We added the readInt function to kernel.c
+
+		Given parameter n (int*), *n is set to 0 by default and the 
+		readString function is called on a variable c (char*)
+
+		For each character in c before the null character, *n is multiplied
+		by 10 to shift each digit to the left, after which the character 
+		is converted into a digit and added to *n
+
+	We mapped the readString, writeInt, and readInt functions to calls of
+	interrupt 0d33 (0x21) corresponding to the values 1, 13, and 14 stored
+	in AX respectively
+
+		The interrupt call for writeInt now takes a parameter for cx that 
+		determines whether the output goes to the screen or the printer,
+		just like with printString
+
+		All calls of readString, writeInt, and readInt have been replaced
+		with interrupt calls
+
+	We downloaded the file madLibKernel.c and replaced the contents of
+	the main function of kernel.c with it to test the functions we added. 
+	The mad lib program run when the kernel is started
+
+
+Lab 1 Work Log
+
+	We downloaded the files kernel.c, kernel.asm, and bootload.asm, all 
+	of which are present in this directory
+
+	We assembled bootload.asm into the bootload executable, which is 
+	present in this directory
+
+	We assembled kernel.asm into the kasm.o output file, which is 
+	present in this directory
+
+	We created the file CompileOS.sh and added terminal commands to 
+	do the following:
+
+		Populate the disk image with zeroes to fill it up to its 
+		necessary size
+
+		Place the contents of bootload into the disk image
+
+		Compile kernel.c into kernel.o using bcc
+
+		Link kernel.o with kasm.o to create the kernel executable
+
+		Place the contents of kernel into the disk image at the necessary
+		location (sector 259)
+
+	There are a total of five commands that can be viewed when opening
+	compileOS.sh
+
+	We made compileOS.sh executable. Entering './compileOS.sh' will
+	create kernel.o and kernel, and make it so that entering 'echo “c” | 
+	bochs –f bdos.txt' will run the kernel in bochs.
+
+	We added the printString function to kernel.c
+
+		Given parameters c (char*) and d (int), each character in c that 
+		comes before the null character (not including the null character) 
+		will be sent to the printer output through interrupt 0d23 (0x17) 
+		if d equals 1, or displayed on the screen through interrupt 0d16
+		(0x10) otherwise.
+
+		When the kernel is run, the logo will appear on the screen since 
+		d is set to 0, while the statement "Hello world from Thomas and 
+		Geetha." will appear in the file printer.out since it was printed with 
+		d set to 1.
+
+	We set printString to be called by the handleInterrupt21 function
+	when the parameter for ax is set to 0, with bx being passed as c and cx
+	being passed as d.
+
+	We then replaced each call of printString in the rest of the program with 
+	a call to interrupt 0d33 (0x21) that results in the same output. These 
+	changes can be viewed in the main, printLogo, and clearScreen functions
+	in kernel.c.
+		
