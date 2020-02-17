@@ -32,7 +32,7 @@ void main()
 {
    makeInterrupt21();
    printLogo();
-   interrupt(33, 0, "Hello world from Thomas.\r\n\0", 1, 0);
+   interrupt(33, 0, "Hello world from Thomas and Geetha.\r\n\0", 1, 0);
    while(1); /* stop program by putting in an infinite loop */
 }
 
@@ -76,7 +76,7 @@ void printLogo()
    interrupt(33, 0, "   //   \\\\        | |_) | | (_| | (__|   <| |__| | |__| |____) |\r\n\0",0, 0);
    interrupt(33, 0, "._/'     `\\.      |____/|_|\\__,_|\\___|_|\\_\\_____/ \\____/|_____/\r\n\0",0, 0);
    interrupt(33, 0, " BlackDOS2020 v. 1.03, c. 2019. Based on a project by M. Black. \r\n\0",0, 0);
-   interrupt(33, 0, " Author(s): Thomas Li.\r\n\r\n\0",0, 0);
+   interrupt(33, 0, " Author(s): Thomas Li, Geetha Malempati.\r\n\r\n\0",0, 0);
 }
 
 /* MAKE FUTURE UPDATES HERE */

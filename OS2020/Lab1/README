@@ -41,8 +41,9 @@ Lab 1 Work Log
 		(0x10) otherwise.
 
 		When the kernel is run, the logo will appear on the screen since 
-		d is set to 0, while the statement "Hello world from Thomas." will
-		appear in the file printer.out since it was printed with d set to 1.
+		d is set to 0, while the statement "Hello world from Thomas and 
+		Geetha." will appear in the file printer.out since it was printed 
+		with d set to 1.
 
 	We set printString to be called by the handleInterrupt21 function
 	when the parameter for ax is set to 0, with bx being passed as c and cx

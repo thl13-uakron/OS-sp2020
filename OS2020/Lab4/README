@@ -1,14 +1,5 @@
 Operating Systems 001
 
-Lab 5 Work Log
-
-	We created the file Shell.c, which is present in this directory
-
-	We added commands to compileOS.sh to compile Shell.c, link it to 
-	basm.o, generate an executable shell program, and copy the program
-	into the disk image where it can be loaded.
-
-
 Lab 4 Work Log
 
 	We added the runProgram function to kernel.c
