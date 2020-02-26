@@ -1,6 +1,6 @@
 int stringEquals(char*, char*);
-void parseArguments(char*, char*, char**, int);
-void handleCommand(char*, char**, int, char*);
+void parseArguments(char*, char*, char*, char*);
+void handleCommand(char*, char*, char*, char*);
 void clearBuffer(char*, int);
 void boot();
 void clrs();
@@ -18,8 +18,8 @@ void twet(char*);
 void main() {
   char buffer[512];
   char command[5];
-  char argv[8][32];
-  int *argc;
+  char arg1[32];
+  char arg2[32];
   char config[2];
 
   /* read configuration settings */
@@ -30,8 +30,8 @@ void main() {
   while (1) {
     interrupt(33, 0, "\r\n~(_^> \0", 0, 0);
     interrupt(33, 1, buffer, 0, 0);
-    parseArguments(buffer, command, argv, argc);
-    handleCommand(command, argv, argc, config);
+    parseArguments(buffer, command, arg1, arg2);
+    handleCommand(command, arg1, arg2, config);
   }
 }
 
@@ -49,7 +49,7 @@ int stringEquals(char* c1, char* c2) {
   return 1;
 }
 
-void handleCommand(char* command, char** argv, int* argc, char* config) {
+void handleCommand(char* command, char* arg1, char* arg2, char* config) {
   /* execute system calls based on contents of command and arguments */
   if (stringEquals(command, "boot\0") == 1) {
     boot();
@@ -58,74 +58,79 @@ void handleCommand(char* command, char** argv, int* argc, char* config) {
     clrs(config);
   }
   else if (stringEquals(command, "echo\0") == 1) {
-    if (*argc > 0) {
-      echo(argv[0]);
-    }
+    echo(arg1);
   }
   else if (stringEquals(command, "copy\0") == 1) {
-    copy(argv[0], argv[1]);
+    copy(arg1, arg2);
   }
   else if (stringEquals(command, "ddir\0") == 1) {
     ddir();
   }
   else if (stringEquals(command, "exec\0") == 1) {
-    exec(argv[0]);
+    exec(arg1);
   }
   else if (stringEquals(command, "help\0") == 1) {
     help();
   }
   else if (stringEquals(command, "prnt\0") == 1) {
-    prnt(argv[0]);
+    prnt(arg1);
   }
   else if (stringEquals(command, "remv\0") == 1) {
-    remv(argv[0]);
+    remv(arg1);
   }
   else if (stringEquals(command, "senv\0") == 1) {
     senv();
   }
   else if (stringEquals(command, "show\0") == 1) {
-    show(argv[0]);
+    show(arg1);
   }
   else if (stringEquals(command, "twet\0") == 1) {
-    twet(argv[0]);
+    twet(arg1);
   }
   else {
     interrupt(33, 0, "bad command or file name\0");
   }
 }
 
-void parseArguments(char* buffer, char* command, char** argv, int* argc) {
+void parseArguments(char* buffer, char* command, char* arg1, char* arg2) {
   /* split input into command and arguments */
   int bufferIndex = 0;
   int argCharIndex = 0;
-  int argStrIndex = 0;
-  *argc = 0;
 
-  /* copy characters from buffer to command string until encountering whitespace */
-  while(buffer[bufferIndex] != ' ' && buffer[bufferIndex] != '\0') {
+  /* copy characters from buffer to command string until encountering whitespace or null */
+  while(buffer[bufferIndex] != ' ' && buffer[bufferIndex] != '\0' && bufferIndex < 5) {
     command[bufferIndex] = buffer[bufferIndex];
     bufferIndex = bufferIndex + 1;
   }
   command[bufferIndex] = '\0';
-  ++bufferIndex;
 
-  while (buffer[bufferIndex] != '\0') {
-    /* clear existing contents of argument string */
-    clearBuffer(argv[argStrIndex], 32);
+  while (buffer[bufferIndex] == ' ') {
+    ++bufferIndex;
+  }
 
-    /* copy characters from buffer to argument string until encountering whitespace */
-    while (buffer[bufferIndex] != ' ' && buffer[bufferIndex] != '\0') {
-      argv[argStrIndex][argCharIndex] = buffer[bufferIndex];
-      ++bufferIndex;
+  /* copy characters from buffer to first argument string until encountering whitespace or null */
+  while ((buffer[bufferIndex] != ' ' || stringEquals(command, "echo\0") == 1) && buffer[bufferIndex] != '\0') {
+    arg1[argCharIndex] = buffer[bufferIndex];
+    ++bufferIndex;
+    /* reduce multiple spaces in case of echo command */
+    if (!(stringEquals(command, "echo\0") == 1 && arg1[argCharIndex] == ' ' && arg1[argCharIndex - 1] == ' ')) {
       ++argCharIndex;
     }
-
-    /* move to next argument */
-    argv[argStrIndex][argCharIndex] = '\0';
-    ++bufferIndex;
-    ++argStrIndex;
-    argCharIndex = 0;
   }
+  arg1[argCharIndex] = '\0';
+
+  while (buffer[bufferIndex] == ' ') {
+    ++bufferIndex;
+  }
+
+  argCharIndex = 0;
+  /* copy characters from buffer to first argument string until encountering whitespace or null */
+  while (buffer[bufferIndex] != ' ' && buffer[bufferIndex] != '\0') {
+    arg2[argCharIndex] = buffer[bufferIndex];
+    ++bufferIndex;
+    ++argCharIndex;
+  }
+  arg2[argCharIndex] = '\0';
 
   /* clear input buffer */
   clearBuffer(buffer, 512);
@@ -151,7 +156,9 @@ void clrs(char* config) {
 
 void echo(char* comment) {
   /* print comment on screen */
-  interrupt(33, 0, comment, 0, 0);
+  if (comment[0] != '\0') {
+    interrupt(33, 0, comment, 0, 0);
+  }
 }
 
 /* commands that are recognized but aren't implemented yet */

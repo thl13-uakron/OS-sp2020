@@ -8,6 +8,44 @@ Lab 5 Work Log
 	basm.o, generate an executable shell program, and copy the program
 	into the disk image where it can be loaded.
 
+	We modified the main routine of the Shell program to repeatedly 
+	prompt the user for a command, parse the command name and 
+	arguments from the input buffer, and execute the command.
+
+		Commands and arguments are recognized as being delineated by
+		whitespace, with multiple spaces being reduced to a single space
+
+	We added functionality for the following commands:
+
+		"boot", which calls interrupt 0d25 to reload the kernel
+
+		"clrs", which uses interrupt 0d33 with function 0d12 to clear the 
+		screen
+
+		"echo", which uses interrupt 0d33 with function 0d1 to print the 
+		argument to the screen
+
+	In addition, we added code that, for the following commands, prints the
+	name of the command and the arguments passed to it:
+
+		"copy", which takes two arguments
+
+		"ddir", which takes no arguments
+
+		"exec", which takes one argument
+
+		"help", which takes no arguments
+
+		"prnt", which takes one argument
+
+		"remv", which takes one argument
+
+		"senv", which takes one argument
+
+		"show", which takes one argument
+
+		"twet", which takes one argument
+
 
 Lab 4 Work Log
 
