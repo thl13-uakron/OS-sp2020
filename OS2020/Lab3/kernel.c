@@ -124,6 +124,8 @@ void readString(char* c) {
     if (input == enter) {
       /* append null character to string */
       c[i] = '\0';
+      /* print carriage return */
+      interrupt(16, (14 * 256) + '\r', 0, 0, 0);
       break;
     }
     else {

@@ -1,31 +1,5 @@
 Operating Systems 001
 
-Lab 6 Work Log
-
-	We downloaded the files map, loadFile.c, ddir.c, and error.c
-
-	We modified compileOS.sh to load map into floppya.img at sector 256. 
-	This shows the space map of the disk image at sector 256 (0x20000), and 
-	the directory map at sector 257 (0x20200), as can be seen when doing a 
-	hexdump of the disk image
-
-	We compiled the file loadFile.c into the executable loadFile, which takes
-	the name of a file as an argument and loads the file to the disk image
-	when run, updating the space map and directory map
-
-	We added the function readFile to kernel.c, typing to a call of interrupt 
-	0d33 (0x21) with function number 3.
-
-		Given parameters fname (char*), buffer (char*), and size(int*), the
-		directory is loaded from the disk image to a local buffer, and each
-		file name contained in it is compared to fname.
-
-		If the names match, the sector number and sector count stored in
-		the directory alongside that filename are read, and the file is read
-		into buffer using the readSectors function. 
-
-		If fname is not present in the directory, an error is returned
-
 Lab 5 Work Log
 
 	We created the file Shell.c, which is present in this directory

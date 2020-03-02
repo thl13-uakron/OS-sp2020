@@ -30,22 +30,16 @@ void clearScreen(int, int);
 int mod(int, int);
 int div(int, int);
 void runProgram(int, int, int);
-void readFile(char*, char*, int);
 
 void main()
 {
   char buffer[512];
-  int size;
   makeInterrupt21();
-
-  /* load config file */
   interrupt(33, 2, buffer, 258, 1);
   interrupt(33, 12, buffer[0] + 1, buffer[1] + 1, 0);
   printLogo();
-
-  /* load and print msg */
-  interrupt(33, 3, "msg\0", buffer, &size);
-  interrupt(33, 0, buffer, 0, 0);
+  runProgram(30, 10, 2);
+  interrupt(33, 0, "Bad or missing command interpreter.\r\n\0", 0, 0);
   while (1);
 }
 
@@ -127,7 +121,7 @@ void readString(char* c) {
     if (input == enter) {
       /* append null character to string */
       c[i] = '\0';
-
+      
       /* print carriage return and line feed */
       interrupt(16, (14 * 256) + '\r', 0, 0, 0);
       interrupt(16, (14 * 256) + '\n', 0, 0, 0);
@@ -266,46 +260,6 @@ void writeSectors(char* buffer, int sector, int sectorCount) {
   interrupt(19, ax, bx, cx, dx);
 }
 
-void readFile(char* fname, char* buffer, int* size) {
-  char directory[512];
-  int directoryIndex = 0;
-  int fnameIndex = 0;
-  int fileFound = 0;
-  int sector;
-  int sectorCount;
-
-  /* load disk directory */
-  interrupt(33, 2, directory, 257, 1);
-
-  /* search for file name */
-  while (directoryIndex < 512) {
-    /* compare file name in directory to file name passed to function */
-    while (directory[directoryIndex] == fname[fnameIndex]) {
-      ++directoryIndex;
-      ++fnameIndex;
-      if (fname[fnameIndex] == '\0' || fnameIndex > 7) {
-        /* break if names match */
-        fileFound = 1;
-        break;
-      }
-    }
-    /* move to next file name in directory if names don't match */
-    directoryIndex += 16 - mod(directoryIndex, 16);
-  }
-
-  if (fileFound == 0) {
-    /* return error if file not found */
-  }
-  else {
-    /* read file into buffer if found */
-    /* get sector number and sector count */
-    directoryIndex = 8 - mod(directoryIndex, 8);
-    sector = directory[directoryIndex];
-    sectorCount = directory[directoryIndex + 1];
-    interrupt(33, 2, buffer, sector, sectorCount);
-  }
-}
-
 void runProgram(int start, int size, int segment) {
   int i = 0;
 
@@ -349,14 +303,7 @@ void handleInterrupt21(int ax, int bx, int cx, int dx)
         /* if ax is 2, dx sectors starting from sector cx are read into bx from the floppy disk */
         readSectors(bx, cx, dx);
         break;
-      case 3:
-        /* if ax is 3, a file whose name is stored at bx and whose contents are stored at cx is read in dx sectors */
-        readFile(bx, cx, dx);
-        break;
-      case 4:
-        /* if ax is 4, a file whose name is stored at bx is placed into segment cx to be loaded and executed */
-        runProgram(bx, cx);
-        break;
+      /*case 3: case 4: */
       case 5:
         /* if ax is 5, the program stops */
         stop();
@@ -379,9 +326,7 @@ void handleInterrupt21(int ax, int bx, int cx, int dx)
         /* if ax is 14, a string is read of keyboard input before being converted to an integer and stored in bx */
         readInt(bx);
         break;
-      case 15:
-        /* if ax is 15, take error number bx and */
-        break;
+      /*case 15: */
       default: interrupt(33, 0, "General BlackDOS error.\r\n\0", 0, 0);
    }
 }
