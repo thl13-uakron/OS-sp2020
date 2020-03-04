@@ -161,23 +161,26 @@ void copy(char* file1, char* file2) {
 }
 
 void ddir() {
-  interrupt(33, 0, "Recognized command: ddir\0", 0, 0);
+  /* load and execute ddir program at sector 4 to list directory contents */
+  interrupt(33, 4, "ddir\0", 4, 0);
 }
 
 void exec(char* filename) {
-  interrupt(33, 0, "Recognized command: exec\r\n\0", 0, 0);
-  interrupt(33, 0, "Arguments: ", 0, 0);
-  interrupt(33, 0, filename, 0, 0);
+  /* load and execute program file at segment 4 */
+  interrupt(33, 4, filename, 4, 0);
 }
 
 void help() {
+  /* display user manual */
   interrupt(33, 0, "Recognized command: help\0", 0, 0);
 }
 
 void prnt(char* filename) {
-  interrupt(33, 0, "Recognized command: prnt\r\n\0", 0, 0);
-  interrupt(33, 0, "Arguments: ", 0, 0);
-  interrupt(33, 0, filename, 0, 0);
+  /* load file and print contents to printer */
+  char buffer[13312];
+  int size;
+  interrupt(33, filename, buffer, &size);
+  interrupt(33, 0, buffer, 1, 0);
 }
 
 void remv(char* filename) {
@@ -187,13 +190,16 @@ void remv(char* filename) {
 }
 
 void senv() {
-  interrupt(33, 0, "Recognized command: senv\0", 0, 0);
+  /* load and execute Stenv at segment 4 to allow user to set environment variables */
+  interrupt(33, 4, "Stenv\0", 4, 0);
 }
 
 void show(char* filename) {
-  interrupt(33, 0, "Recognized command: show\r\n\0", 0, 0);
-  interrupt(33, 0, "Arguments: ", 0, 0);
-  interrupt(33, 0, filename, 0, 0);
+  /* load file and print contents to screen */
+  char buffer[13312];
+  int size;
+  interrupt(33, filename, buffer, &size);
+  interrupt(33, 0, buffer, 0, 0);
 }
 
 void twet(char* filename) {

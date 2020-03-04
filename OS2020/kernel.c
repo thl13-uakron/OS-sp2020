@@ -29,13 +29,13 @@ void printLogo();
 void clearScreen(int, int);
 int mod(int, int);
 int div(int, int);
-void runProgram(int, int, int);
+void runProgram(char*, int);
 void readFile(char*, char*, int);
+void error(int);
 
 void main()
 {
   char buffer[512];
-  int size;
   makeInterrupt21();
 
   /* load config file */
@@ -43,9 +43,9 @@ void main()
   interrupt(33, 12, buffer[0] + 1, buffer[1] + 1, 0);
   printLogo();
 
-  /* load and print msg */
-  interrupt(33, 3, "msg\0", buffer, &size);
-  interrupt(33, 0, buffer, 0, 0);
+  /* load shell */
+  interrupt(33, 4, "Shell\0", 2, 0);
+  interrupt(33, 0, "Bad or missing command interpreter\r\n\0", 0, 0);
   while (1);
 }
 
@@ -295,6 +295,7 @@ void readFile(char* fname, char* buffer, int* size) {
 
   if (fileFound == 0) {
     /* return error if file not found */
+    interrupt(33, 15, 0, 0, 0);
   }
   else {
     /* read file into buffer if found */
@@ -306,12 +307,13 @@ void readFile(char* fname, char* buffer, int* size) {
   }
 }
 
-void runProgram(int start, int size, int segment) {
+void runProgram(char* name, int segment) {
   int i = 0;
+  int size;
 
   /* load file from disk to buffer */
   char buffer[13312];
-  interrupt(33, 2, buffer, start, size);
+  interrupt(33, 3, name, buffer, &size);
 
   /* get base location of segment */
   segment = segment * 4096;
@@ -327,7 +329,44 @@ void runProgram(int start, int size, int segment) {
 }
 
 void stop() {
-  while(1);
+  launchProgram(8192);
+}
+
+void error(int bx)
+{
+   switch (bx) {
+	   case 0:
+	   /* error 0 = "File not found." */
+	   interrupt(16, 3654, 0, 0, 0); interrupt(16, 3689, 0, 0, 0); interrupt(16, 3692, 0, 0, 0);
+	   interrupt(16, 3685, 0, 0, 0); interrupt(16, 3616, 0, 0, 0); interrupt(16, 3694, 0, 0, 0);
+	   interrupt(16, 3695, 0, 0, 0); interrupt(16, 3700, 0, 0, 0); interrupt(16, 3616, 0, 0, 0);
+	   interrupt(16, 3686, 0, 0, 0); interrupt(16, 3695, 0, 0, 0); interrupt(16, 3701, 0, 0, 0);
+	   interrupt(16, 3694, 0, 0, 0); interrupt(16, 3684, 0, 0, 0);
+	   break;
+	   case 1:
+	   /* error 1 = "Bad file name." */
+	   interrupt(16, 3650, 0, 0, 0); interrupt(16, 3681, 0, 0, 0); interrupt(16, 3684, 0, 0, 0);
+	   interrupt(16, 3616, 0, 0, 0); interrupt(16, 3686, 0, 0, 0); interrupt(16, 3689, 0, 0, 0);
+	   interrupt(16, 3692, 0, 0, 0); interrupt(16, 3685, 0, 0, 0); interrupt(16, 3616, 0, 0, 0);
+	   interrupt(16, 3694, 0, 0, 0); interrupt(16, 3681, 0, 0, 0); interrupt(16, 3693, 0, 0, 0);
+	   interrupt(16, 3685, 0, 0, 0);
+	   break;
+	   case 2:
+	   /* error 2 = "Disk full." */
+	   interrupt(16, 3652, 0, 0, 0); interrupt(16, 3689, 0, 0, 0); interrupt(16, 3699, 0, 0, 0);
+	   interrupt(16, 3691, 0, 0, 0); interrupt(16, 3616, 0, 0, 0); interrupt(16, 3686, 0, 0, 0);
+	   interrupt(16, 3701, 0, 0, 0); interrupt(16, 3692, 0, 0, 0); interrupt(16, 3692, 0, 0, 0);
+	   break;
+	   default:
+	   /* default = "General error." */
+	   interrupt(16, 3655, 0, 0, 0); interrupt(16, 3685, 0, 0, 0); interrupt(16, 3694, 0, 0, 0);
+	   interrupt(16, 3685, 0, 0, 0); interrupt(16, 3698, 0, 0, 0); interrupt(16, 3681, 0, 0, 0);
+	   interrupt(16, 3692, 0, 0, 0); interrupt(16, 3616, 0, 0, 0); interrupt(16, 3685, 0, 0, 0);
+	   interrupt(16, 3698, 0, 0, 0); interrupt(16, 3698, 0, 0, 0); interrupt(16, 3695, 0, 0, 0);
+	   interrupt(16, 3698, 0, 0, 0);
+   }
+   interrupt(16, 3630, 0, 0, 0); interrupt(16, 3597, 0, 0, 0); interrupt(16, 3594, 0, 0, 0);
+   interrupt(33, 5, 0, 0, 0);
 }
 /* ^^^^^^^^^^^^^^^^^^^^^^^^ */
 /* MAKE FUTURE UPDATES HERE */
@@ -380,7 +419,8 @@ void handleInterrupt21(int ax, int bx, int cx, int dx)
         readInt(bx);
         break;
       case 15:
-        /* if ax is 15, take error number bx and */
+        /* if ax is 15, take error number bx and print a corresponding error message */
+        error(bx);
         break;
       default: interrupt(33, 0, "General BlackDOS error.\r\n\0", 0, 0);
    }
